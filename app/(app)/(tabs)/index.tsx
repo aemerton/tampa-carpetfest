@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { PollCard } from "@/components/PollCard";
 import { Button, Card, ErrorText, Header, Loading, Muted, SectionTitle } from "@/components/ui";
 import { useIsAdmin, useUserId } from "@/lib/auth";
 import { useScreenData } from "@/lib/data";
@@ -104,6 +105,8 @@ export default function Home() {
                 <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </Card>
             </Pressable>
+
+            <PollCard eventId={event.id} userId={userId} canVote={registered} />
 
             <SectionTitle>Announcements</SectionTitle>
             {isAdmin ? (

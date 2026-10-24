@@ -21,6 +21,7 @@ export default function ManageStack() {
       <Stack.Screen name="[eventId]/index" options={{ title: "Manage event" }} />
       <Stack.Screen name="[eventId]/itinerary" options={{ title: "Itinerary" }} />
       <Stack.Screen name="[eventId]/announcements" options={{ title: "Announcements" }} />
+      <Stack.Screen name="[eventId]/poll" options={{ title: "Poll" }} />
       <Stack.Screen name="[eventId]/attendees" options={{ title: "Attendee list" }} />
     </Stack>
   );

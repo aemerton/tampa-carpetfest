@@ -14,14 +14,15 @@ export default function ManageEventDetail() {
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState("");
   const { data, error, refresh } = useScreenData(async () => {
-    const [event, codeRow, attendees, items, news] = await Promise.all([
+    const [event, codeRow, attendees, items, news, poll] = await Promise.all([
       loadEvent(eventId),
       supabase.from("event_codes").select("code").eq("event_id", eventId).maybeSingle(),
       count("event_attendees"),
       count("itinerary_items"),
       count("announcements"),
+      supabase.from("event_polls").select("question, is_open").eq("event_id", eventId).maybeSingle(),
     ]);
-    return { event, code: codeRow.data?.code ?? "", attendees, items, news };
+    return { event, code: codeRow.data?.code ?? "", attendees, items, news, poll: poll.data };
   }, [eventId]);
 
   async function count(table: string) {
@@ -42,7 +43,7 @@ export default function ManageEventDetail() {
       <Loading />
     );
   }
-  const { event, code, attendees, items, news } = data;
+  const { event, code, attendees, items, news, poll } = data;
   const active = event.status === "active";
 
   async function closeEvent() {
@@ -113,6 +114,14 @@ export default function ManageEventDetail() {
         label="Announcements"
         detail={`${news} posted`}
         onPress={() => router.push(`/manage/${eventId}/announcements`)}
+      />
+      <Row
+        icon="stats-chart"
+        label="Poll"
+        detail={
+          poll ? `${poll.is_open ? "Open" : "Closed"} · ${poll.question}` : "Not set up yet"
+        }
+        onPress={() => router.push(`/manage/${eventId}/poll`)}
       />
 
       <ErrorText>{actionError}</ErrorText>
