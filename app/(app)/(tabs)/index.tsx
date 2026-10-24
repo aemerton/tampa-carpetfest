@@ -90,24 +90,6 @@ export default function Home() {
               </Card>
             ) : null}
 
-            <Pressable
-              onPress={() =>
-                router.navigate({ pathname: "/attendees", params: { view: "answers" } })
-              }
-              style={({ pressed }) => [pressed && { opacity: 0.8 }]}
-            >
-              <Card style={styles.getToKnow}>
-                <Ionicons name="albums" size={28} color={colors.accent} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.cardTitle}>Get to know everyone</Text>
-                  <Muted>Pick a question and swipe through how other attendees answered.</Muted>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-              </Card>
-            </Pressable>
-
-            <PollCard eventId={event.id} userId={userId} canVote={registered} />
-
             <SectionTitle>Announcements</SectionTitle>
             {isAdmin ? (
               <Button
@@ -145,6 +127,24 @@ export default function Home() {
                 </Muted>
               </Card>
             ))}
+
+            <Pressable
+              onPress={() =>
+                router.navigate({ pathname: "/attendees", params: { view: "answers" } })
+              }
+              style={({ pressed }) => [pressed && { opacity: 0.8 }]}
+            >
+              <Card style={styles.getToKnow}>
+                <Ionicons name="albums" size={28} color={colors.accent} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.cardTitle}>Get to know everyone</Text>
+                  <Muted>Pick a question and swipe through how other attendees answered.</Muted>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+              </Card>
+            </Pressable>
+
+            <PollCard eventId={event.id} userId={userId} canVote={registered} />
           </>
         ) : null}
 
