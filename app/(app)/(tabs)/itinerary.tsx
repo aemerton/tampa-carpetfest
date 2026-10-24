@@ -1,6 +1,8 @@
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { router } from "expo-router";
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Card, ErrorText, Header, Muted, SectionTitle } from "@/components/ui";
+import { Button, Card, ErrorText, Header, Muted, SectionTitle } from "@/components/ui";
+import { useIsAdmin } from "@/lib/auth";
 import { useScreenData } from "@/lib/data";
 import { supabase } from "@/lib/supabase";
 import { colors, spacing } from "@/lib/theme";
@@ -17,6 +19,7 @@ const dayLabel = (iso: string) =>
   });
 
 export default function Itinerary() {
+  const isAdmin = useIsAdmin();
   const { data, error, refreshing, refresh } = useScreenData(async () => {
     const { data, error } = await supabase
       .from("itinerary_items")
@@ -44,25 +47,43 @@ export default function Itinerary() {
         }
       >
         <Header title="Itinerary" logoSize={72} />
+        {isAdmin ? (
+          <>
+            <Button
+              title="+ Add itinerary item"
+              variant="secondary"
+              onPress={() => router.push("/event-editor")}
+            />
+            {data && data.length > 0 ? <Muted>Tap any item to edit or delete it.</Muted> : null}
+          </>
+        ) : null}
         <ErrorText>{error}</ErrorText>
         {data && data.length === 0 ? <Muted>The event schedule is coming soon.</Muted> : null}
         {days.map((day) => (
           <View key={day.label} style={{ gap: spacing.sm }}>
             <SectionTitle>{day.label}</SectionTitle>
             {day.items.map((item) => (
-              <Card key={item.id} style={styles.row}>
-                <Text style={styles.time}>
-                  {time(item.starts_at)}
-                  {item.ends_at ? `\n– ${time(item.ends_at)}` : ""}
-                </Text>
-                <View style={{ flex: 1, gap: 2 }}>
-                  <Text style={styles.title}>{item.title}</Text>
-                  {item.location ? <Muted>{item.location}</Muted> : null}
-                  {item.description ? (
-                    <Text style={styles.body}>{item.description}</Text>
-                  ) : null}
-                </View>
-              </Card>
+              <Pressable
+                key={item.id}
+                disabled={!isAdmin}
+                onPress={() =>
+                  router.push({ pathname: "/event-editor", params: { id: item.id } })
+                }
+              >
+                <Card style={styles.row}>
+                  <Text style={styles.time}>
+                    {time(item.starts_at)}
+                    {item.ends_at ? `\n– ${time(item.ends_at)}` : ""}
+                  </Text>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Text style={styles.title}>{item.title}</Text>
+                    {item.location ? <Muted>{item.location}</Muted> : null}
+                    {item.description ? (
+                      <Text style={styles.body}>{item.description}</Text>
+                    ) : null}
+                  </View>
+                </Card>
+              </Pressable>
             ))}
           </View>
         ))}

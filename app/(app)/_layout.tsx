@@ -1,42 +1,23 @@
-import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { Stack } from "expo-router";
 import { colors } from "@/lib/theme";
 
-type IconName = React.ComponentProps<typeof Ionicons>["name"];
-
-function icon(name: IconName) {
-  return ({ color, size }: { color: string; size: number }) => (
-    <Ionicons name={name} color={color} size={size} />
-  );
-}
-
-export default function AppTabs() {
+export default function AppStack() {
   return (
-    <Tabs
+    <Stack
       screenOptions={{
-        headerShown: false,
-        sceneStyle: { backgroundColor: colors.bg },
-        tabBarStyle: {
-          backgroundColor: colors.bg,
-          borderTopColor: colors.border,
-        },
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.textMuted,
+        contentStyle: { backgroundColor: colors.bg },
+        headerStyle: { backgroundColor: colors.bg },
+        headerTintColor: colors.accent,
+        headerTitleStyle: { color: colors.text },
+        headerShadowVisible: false,
       }}
     >
-      <Tabs.Screen name="index" options={{ title: "Home", tabBarIcon: icon("home") }} />
-      <Tabs.Screen
-        name="itinerary"
-        options={{ title: "Itinerary", tabBarIcon: icon("calendar") }}
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="announcement-editor"
+        options={{ presentation: "modal", title: "Announcement" }}
       />
-      <Tabs.Screen
-        name="attendees"
-        options={{ title: "Attendees", tabBarIcon: icon("people") }}
-      />
-      <Tabs.Screen
-        name="me"
-        options={{ title: "My Profile", tabBarIcon: icon("person-circle") }}
-      />
-    </Tabs>
+      <Stack.Screen name="event-editor" options={{ presentation: "modal", title: "Itinerary item" }} />
+    </Stack>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, Image, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Avatar, YearBadges } from "@/components/profile";
 import {
   Button,
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui";
 import { useUserId } from "@/lib/auth";
 import { PAST_EVENT_YEARS } from "@/lib/constants";
+import { notify } from "@/lib/dialogs";
 import { pickAndUploadPhoto, type PhotoKind } from "@/lib/photos";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
@@ -42,11 +43,6 @@ const PHOTO_FIELD: Record<PhotoKind, keyof EditableProfile> = {
   "pet-reptile": "pet_reptile_photo_url",
   "other-pet": "other_pet_photo_url",
 };
-
-function notify(message: string) {
-  if (Platform.OS === "web") window.alert(message);
-  else Alert.alert(message);
-}
 
 export default function MyProfile() {
   const userId = useUserId();

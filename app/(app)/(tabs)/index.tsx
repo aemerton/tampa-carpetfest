@@ -1,8 +1,8 @@
 import { router } from "expo-router";
-import { RefreshControl, ScrollView, StyleSheet, Text } from "react-native";
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, Card, ErrorText, Header, Muted, SectionTitle } from "@/components/ui";
-import { useUserId } from "@/lib/auth";
+import { useIsAdmin, useUserId } from "@/lib/auth";
 import { EVENT_YEAR } from "@/lib/constants";
 import { useScreenData } from "@/lib/data";
 import { supabase } from "@/lib/supabase";
@@ -11,6 +11,7 @@ import type { Announcement, Profile } from "@/lib/types";
 
 export default function Home() {
   const userId = useUserId();
+  const isAdmin = useIsAdmin();
   const { data, error, refreshing, refresh } = useScreenData(async () => {
     const [me, news] = await Promise.all([
       supabase
@@ -54,11 +55,30 @@ export default function Home() {
         ) : null}
 
         <SectionTitle>Announcements</SectionTitle>
+        {isAdmin ? (
+          <Button
+            title="+ New announcement"
+            variant="secondary"
+            onPress={() => router.push("/announcement-editor")}
+          />
+        ) : null}
         <ErrorText>{error}</ErrorText>
         {data?.announcements.length === 0 ? <Muted>No announcements yet.</Muted> : null}
         {data?.announcements.map((a) => (
           <Card key={a.id}>
-            <Text style={styles.cardTitle}>{a.title}</Text>
+            <View style={styles.titleRow}>
+              <Text style={[styles.cardTitle, { flex: 1 }]}>{a.title}</Text>
+              {isAdmin ? (
+                <Pressable
+                  hitSlop={10}
+                  onPress={() =>
+                    router.push({ pathname: "/announcement-editor", params: { id: a.id } })
+                  }
+                >
+                  <Text style={styles.edit}>Edit</Text>
+                </Pressable>
+              ) : null}
+            </View>
             <Text style={styles.body}>{a.body}</Text>
             <Muted>
               {new Date(a.created_at).toLocaleString(undefined, {
@@ -86,5 +106,7 @@ const styles = StyleSheet.create({
   },
   welcome: { color: colors.text, fontSize: 20, fontWeight: "600", textAlign: "center" },
   cardTitle: { color: colors.accent, fontSize: 17, fontWeight: "700" },
+  titleRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm },
+  edit: { color: colors.accent, fontSize: 14, fontWeight: "600", textDecorationLine: "underline" },
   body: { color: colors.text, fontSize: 16, lineHeight: 23 },
 });
