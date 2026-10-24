@@ -21,7 +21,7 @@ Built with Expo (Expo Router) for the app and Supabase for logins, data, and pho
 - **Attendees.** The active event's attendee list, searchable by name, business, species, or city. With no active event, it shows the past events you attended instead. Tap anyone to see their profile, tabs, and event badges.
 - **My Profile.** Edit your details and photos, answer "Did you attend 2026?", and log out.
 - **Admin tools.**
-  - **Manage Event tab:** create an event (then set up its itinerary), edit the name, code, or registration, manage the itinerary and announcements, remove people from the attendee list, and close or reopen events.
+  - **Manage Event tab:** create an event (then set up its itinerary), edit the name, code, or registration, manage the itinerary and announcements, remove people from the attendee list, close or reopen events, and change the app logo.
   - **Manage button:** on any attendee's profile, lets an admin fix or remove anything on it.
 
 ## Supabase setup
@@ -50,7 +50,7 @@ Then press `w` to open it in a browser. To try it on a phone, scan the QR code w
 
 ## Common changes
 
-- **Logo:** replace `assets/images/logo.png` (square, transparent background, about 512×512). Replace `assets/images/icon.png` (1024×1024) for the app icon.
+- **Logo:** admins can upload a new logo in the app under **Manage Event → App settings**. It shows everywhere, including the login screen. `assets/images/logo.png` is the built-in fallback, and `assets/images/icon.png` (1024×1024) is the home-screen app icon, which needs a code change.
 - **Colors:** `lib/theme.ts`.
 - **Event names, codes, and registration:** in the app, under **Manage Event**.
 

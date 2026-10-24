@@ -14,6 +14,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useBranding } from "@/lib/branding";
 import { colors, radius, spacing } from "@/lib/theme";
 
 /** Page wrapper: safe-area padding, dark background, optional scrolling. */
@@ -47,15 +48,26 @@ export function Screen({
   );
 }
 
+const DEFAULT_LOGO = require("@/assets/images/logo.png");
+
+/** The app logo: the admin-uploaded one if set, otherwise the built-in one. */
+export function Logo({ size = 96 }: { size?: number }) {
+  const { logoUrl } = useBranding();
+  return (
+    <Image
+      source={logoUrl ? { uri: logoUrl } : DEFAULT_LOGO}
+      style={{ width: size, height: size }}
+      resizeMode="contain"
+      accessibilityLabel="Tampa CarpetFest logo"
+    />
+  );
+}
+
 /** Logo + title, as in the mockup's Header component. */
 export function Header({ title, logoSize = 96 }: { title?: string; logoSize?: number }) {
   return (
     <View style={styles.header}>
-      <Image
-        source={require("@/assets/images/logo.png")}
-        style={{ width: logoSize, height: logoSize }}
-        accessibilityLabel="Tampa CarpetFest logo"
-      />
+      <Logo size={logoSize} />
       {title ? <Text style={styles.headerTitle}>{title}</Text> : null}
     </View>
   );

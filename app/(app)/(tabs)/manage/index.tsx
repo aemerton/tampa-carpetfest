@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { RefreshControl, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EventList } from "@/components/EventList";
+import { LogoSettings } from "@/components/LogoSettings";
 import { Button, Card, ErrorText, Header, Loading, Muted, SectionTitle } from "@/components/ui";
 import { useIsAdmin } from "@/lib/auth";
 import { useScreenData } from "@/lib/data";
@@ -70,6 +71,9 @@ export default function ManageEvents() {
           emptyText="No past events yet."
           onPress={(e) => router.push(`/manage/${e.id}`)}
         />
+
+        <SectionTitle>App settings</SectionTitle>
+        <LogoSettings />
       </ScrollView>
     </SafeAreaView>
   );
