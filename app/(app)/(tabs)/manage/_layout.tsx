@@ -17,6 +17,7 @@ export default function ManageStack() {
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="event-form" options={{ title: "Event details" }} />
+      <Stack.Screen name="questions" options={{ title: "Profile questions" }} />
       <Stack.Screen name="[eventId]/index" options={{ title: "Manage event" }} />
       <Stack.Screen name="[eventId]/itinerary" options={{ title: "Itinerary" }} />
       <Stack.Screen name="[eventId]/announcements" options={{ title: "Announcements" }} />

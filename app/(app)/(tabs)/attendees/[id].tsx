@@ -7,23 +7,30 @@ import { Card, ErrorText, Loading, Muted, SectionTitle } from "@/components/ui";
 import { useIsAdmin } from "@/lib/auth";
 import { useScreenData } from "@/lib/data";
 import { loadPastEvents } from "@/lib/events";
+import { loadAnswers, loadQuestions } from "@/lib/questions";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
 import type { Profile } from "@/lib/types";
 
-type Tab = "background" | "petReptile" | "otherPet";
+type Tab = "background" | "petReptile" | "otherPet" | "qa";
 
 export default function AttendeeProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [tab, setTab] = useState<Tab>("background");
   const isAdmin = useIsAdmin();
   const { data, error } = useScreenData(async () => {
-    const [profile, past] = await Promise.all([
+    const [profile, past, questions, answers] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", id).single(),
       loadPastEvents(id),
+      loadQuestions(),
+      loadAnswers(id),
     ]);
     if (profile.error) throw profile.error;
-    return { p: profile.data as Profile, badges: past.map((e) => e.name) };
+    // Only the questions this person answered, in the current order.
+    const qa = questions
+      .filter((q) => answers[q.id])
+      .map((q) => ({ id: q.id, prompt: q.prompt, answer: answers[q.id] }));
+    return { p: profile.data as Profile, badges: past.map((e) => e.name), qa };
   }, [id]);
 
   if (error) {
@@ -34,7 +41,7 @@ export default function AttendeeProfile() {
     );
   }
   if (!data) return <Loading />;
-  const { p, badges } = data;
+  const { p, badges, qa } = data;
 
   return (
     <ScrollView style={{ backgroundColor: colors.bg }} contentContainerStyle={styles.page}>
@@ -70,6 +77,7 @@ export default function AttendeeProfile() {
           { id: "background", label: "Background" },
           { id: "petReptile", label: "Pet Reptile" },
           { id: "otherPet", label: "Other Pet" },
+          { id: "qa", label: "Q&A" },
         ]}
         active={tab}
         onChange={setTab}
@@ -116,6 +124,19 @@ export default function AttendeeProfile() {
             <Muted>Nothing added yet.</Muted>
           )
         ) : null}
+
+        {tab === "qa" ? (
+          qa.length ? (
+            qa.map((item, i) => (
+              <View key={item.id} style={[styles.qa, i > 0 && styles.qaDivider]}>
+                <Text style={styles.question}>{item.prompt}</Text>
+                <Text style={styles.answer}>{item.answer}</Text>
+              </View>
+            ))
+          ) : (
+            <Muted>No answers yet.</Muted>
+          )
+        ) : null}
       </Card>
 
       {badges.length ? (
@@ -129,6 +150,10 @@ export default function AttendeeProfile() {
 }
 
 const styles = StyleSheet.create({
+  qa: { gap: 4, paddingVertical: spacing.sm },
+  qaDivider: { borderTopWidth: 1, borderTopColor: colors.border },
+  question: { color: colors.textMuted, fontSize: 14, lineHeight: 20 },
+  answer: { color: colors.text, fontSize: 16, lineHeight: 23 },
   page: {
     padding: spacing.lg,
     paddingBottom: spacing.xl * 2,

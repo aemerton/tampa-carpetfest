@@ -15,7 +15,8 @@ import { notify } from "@/lib/dialogs";
 import { deletePhotos, pickAndUploadPhoto, type PhotoKind } from "@/lib/photos";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
-import type { CarpetEvent, EditableProfile, Profile } from "@/lib/types";
+import { loadAnswers, loadQuestions, saveAnswers } from "@/lib/questions";
+import type { CarpetEvent, EditableProfile, Profile, ProfileQuestion } from "@/lib/types";
 
 const EDITABLE_KEYS: (keyof EditableProfile)[] = [
   "full_name",
@@ -69,19 +70,33 @@ export function ProfileEditor({
   const [askEvents, setAskEvents] = useState<CarpetEvent[]>([]);
   const [attended, setAttended] = useState<Record<string, boolean>>({});
   const [savedAttended, setSavedAttended] = useState<Record<string, boolean>>({});
+  // "Get to know you" questions and this profile's answers.
+  const [questions, setQuestions] = useState<ProfileQuestion[]>([]);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [savedAnswers, setSavedAnswers] = useState<Record<string, string>>({});
 
   useEffect(() => {
     async function load() {
-      const [profile, events, rows] = await Promise.all([
+      const [profile, events, rows, qs, ans] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", profileId).single(),
         supabase.from("events").select("*").eq("allow_self_report", true).order("created_at"),
         supabase.from("event_attendees").select("event_id").eq("profile_id", profileId),
+        loadQuestions().catch((e: Error) => e),
+        loadAnswers(profileId).catch((e: Error) => e),
       ]);
-      const err = profile.error ?? events.error ?? rows.error;
+      const err =
+        profile.error ??
+        events.error ??
+        rows.error ??
+        (qs instanceof Error ? qs : null) ??
+        (ans instanceof Error ? ans : null);
       if (err) {
         setError(err.message);
         return;
       }
+      setQuestions(qs as ProfileQuestion[]);
+      setAnswers(ans as Record<string, string>);
+      setSavedAnswers(ans as Record<string, string>);
       const p = pickEditable(profile.data as Profile);
       const mine = new Set((rows.data ?? []).map((r) => r.event_id as string));
       const answers = Object.fromEntries(
@@ -172,6 +187,16 @@ export function ProfileEditor({
     }
     setSavedAttended(attended);
 
+    // Save changed "Get to know you" answers.
+    try {
+      await saveAnswers(profileId, savedAnswers, answers);
+      setSavedAnswers(answers);
+    } catch (e: any) {
+      setSaving(false);
+      setError(`Couldn't save the question answers: ${e?.message ?? "unknown error"}`);
+      return;
+    }
+
     // Delete photo files that were removed or replaced.
     const keep = new Set(photoUrls(update));
     await deletePhotos(photoUrls(saved!).filter((u) => !keep.has(u)));
@@ -243,6 +268,28 @@ export function ProfileEditor({
       />
       <Field label="Name" {...text("other_pet_name")} />
       <Field label="Type of animal" {...text("other_pet_type")} placeholder="Dog, cat…" />
+
+      {questions.length ? (
+        <>
+          <SectionTitle>{label("Get to know you", "Get to know them")}</SectionTitle>
+          <Muted>
+            {label(
+              "Answer as many as you like. Skipped questions won't show on your profile.",
+              "Only answered questions show on their profile."
+            )}
+          </Muted>
+          {questions.map((q, i) => (
+            <Field
+              key={q.id}
+              label={`${i + 1}. ${q.prompt}`}
+              value={answers[q.id] ?? ""}
+              onChangeText={(v) => setAnswers((a) => ({ ...a, [q.id]: v }))}
+              multiline
+              style={{ minHeight: 48 }}
+            />
+          ))}
+        </>
+      ) : null}
 
       {askEvents.map((e) => (
         <View key={e.id} style={{ gap: spacing.sm }}>

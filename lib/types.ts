@@ -42,6 +42,13 @@ export type CarpetEvent = {
   closed_at: string | null;
 };
 
+export type ProfileQuestion = {
+  id: string;
+  prompt: string;
+  sort_order: number;
+  active: boolean;
+};
+
 export type ItineraryItem = {
   id: string;
   event_id: string;

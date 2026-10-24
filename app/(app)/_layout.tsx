@@ -19,6 +19,10 @@ export default function AppStack() {
       />
       <Stack.Screen name="event-editor" options={{ presentation: "modal", title: "Itinerary item" }} />
       <Stack.Screen
+        name="question-editor"
+        options={{ presentation: "modal", title: "Profile question" }}
+      />
+      <Stack.Screen
         name="manage-profile"
         options={{ title: "Manage profile", headerBackTitle: "Back" }}
       />

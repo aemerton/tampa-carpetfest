@@ -19,9 +19,9 @@ Built with Expo (Expo Router) for the app and Supabase for logins, data, and pho
 - **Home.** Shows the active event and its announcements if you're registered, a Register card if registration is open, or "coming soon". There's also a **Previous events** button.
 - **Itinerary.** The active event's schedule, grouped by day.
 - **Attendees.** The active event's attendee list, searchable by name, business, species, or city. With no active event, it shows the past events you attended instead. Tap anyone to see their profile, tabs, and event badges.
-- **My Profile.** Edit your details and photos, answer "Did you attend 2026?", and log out.
+- **My Profile.** Edit your details and photos, answer the "Get to know you" questions and "Did you attend 2026?", and log out. Answers show on your profile's **Q&A** tab.
 - **Admin tools.**
-  - **Manage Event tab:** create an event (then set up its itinerary), edit the name, code, or registration, manage the itinerary and announcements, remove people from the attendee list, close or reopen events, and change the app logo.
+  - **Manage Event tab:** create an event (then set up its itinerary), edit the name, code, or registration, manage the itinerary and announcements, remove people from the attendee list, close or reopen events, manage the "Get to know you" profile questions (add, edit, reorder, hide), and change the app logo.
   - **Manage button:** on any attendee's profile, lets an admin fix or remove anything on it.
 
 ## Supabase setup

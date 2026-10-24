@@ -1,5 +1,6 @@
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { RefreshControl, ScrollView, StyleSheet } from "react-native";
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EventList } from "@/components/EventList";
 import { LogoSettings } from "@/components/LogoSettings";
@@ -7,7 +8,7 @@ import { Button, Card, ErrorText, Header, Loading, Muted, SectionTitle } from "@
 import { useIsAdmin } from "@/lib/auth";
 import { useScreenData } from "@/lib/data";
 import { supabase } from "@/lib/supabase";
-import { colors, spacing } from "@/lib/theme";
+import { colors, radius, spacing } from "@/lib/theme";
 import type { CarpetEvent } from "@/lib/types";
 
 export default function ManageEvents() {
@@ -73,6 +74,17 @@ export default function ManageEvents() {
         />
 
         <SectionTitle>App settings</SectionTitle>
+        <Pressable
+          onPress={() => router.push("/manage/questions")}
+          style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.7 }]}
+        >
+          <Ionicons name="chatbubbles" size={22} color={colors.accent} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.linkLabel}>Profile questions</Text>
+            <Muted>Add, edit, reorder, or hide the "Get to know you" questions</Muted>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </Pressable>
         <LogoSettings />
       </ScrollView>
     </SafeAreaView>
@@ -80,6 +92,15 @@ export default function ManageEvents() {
 }
 
 const styles = StyleSheet.create({
+  linkRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    padding: spacing.lg,
+  },
+  linkLabel: { color: colors.text, fontSize: 16, fontWeight: "700" },
   fill: { flex: 1, backgroundColor: colors.bg },
   content: {
     padding: spacing.lg,
