@@ -33,7 +33,9 @@ export default function AppTabs() {
       />
       <Tabs.Screen
         name="attendees"
-        options={{ title: "Attendees", tabBarIcon: icon("people") }}
+        // Leaving the tab resets it, so coming back always shows the live list
+        // rather than whatever past-event screen was open last.
+        options={{ title: "Attendees", tabBarIcon: icon("people"), popToTopOnBlur: true }}
       />
       <Tabs.Screen
         name="me"
@@ -46,6 +48,7 @@ export default function AppTabs() {
           title: "Manage Event",
           tabBarIcon: icon("settings"),
           href: isAdmin ? undefined : null,
+          popToTopOnBlur: true,
         }}
       />
     </Tabs>

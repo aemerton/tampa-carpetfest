@@ -1,6 +1,8 @@
 import { Stack } from "expo-router";
 import { colors } from "@/lib/theme";
 
+export const unstable_settings = { initialRouteName: "index" };
+
 export default function ManageStack() {
   return (
     <Stack

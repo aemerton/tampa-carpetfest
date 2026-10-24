@@ -1,6 +1,10 @@
 import { Stack } from "expo-router";
 import { colors } from "@/lib/theme";
 
+// When another screen links straight into this tab (e.g. Home's "Previous
+// events" button), put the live list underneath so Back returns to it.
+export const unstable_settings = { initialRouteName: "index" };
+
 export default function AttendeesStack() {
   return (
     <Stack
