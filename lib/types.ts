@@ -15,6 +15,12 @@ export type Profile = {
   other_pet_name: string | null;
   other_pet_type: string | null;
   other_pet_photo_url: string | null;
+  contact_email: string | null;
+  phone: string | null;
+  instagram: string | null;
+  facebook: string | null;
+  morph_market: string | null;
+  website: string | null;
   is_admin: boolean;
   created_at: string;
   updated_at: string;

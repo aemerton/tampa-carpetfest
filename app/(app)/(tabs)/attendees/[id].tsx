@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ContactLinks } from "@/components/ContactLinks";
 import { Avatar, EventBadges, InfoRow, TabSwitcher } from "@/components/profile";
 import { Card, ErrorText, Loading, Muted, SectionTitle } from "@/components/ui";
 import { useIsAdmin } from "@/lib/auth";
@@ -74,6 +75,8 @@ export default function AttendeeProfile() {
       </View>
 
       {p.bio ? <Text style={styles.bio}>{p.bio}</Text> : null}
+
+      <ContactLinks profile={p} />
 
       <TabSwitcher<Tab>
         tabs={[

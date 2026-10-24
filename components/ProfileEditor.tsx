@@ -34,6 +34,12 @@ const EDITABLE_KEYS: (keyof EditableProfile)[] = [
   "other_pet_name",
   "other_pet_type",
   "other_pet_photo_url",
+  "contact_email",
+  "phone",
+  "instagram",
+  "facebook",
+  "morph_market",
+  "website",
 ];
 
 const PHOTO_FIELD = {
@@ -241,6 +247,59 @@ export function ProfileEditor({
         {...text("bio")}
         multiline
         placeholder="What you keep, what you breed, how long you've been at it…"
+      />
+
+      <SectionTitle>Contact & links</SectionTitle>
+      <Muted>
+        {label(
+          "All optional. Only the ones you fill in show on your profile, for other logged-in attendees.",
+          "All optional. Only filled-in ones show on their profile."
+        )}
+      </Muted>
+      <Field
+        label="Email"
+        {...text("contact_email")}
+        placeholder="you@example.com"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
+        autoComplete={isSelf ? "email" : "off"}
+      />
+      <Field
+        label="Phone number"
+        {...text("phone")}
+        placeholder="(813) 555-0100"
+        keyboardType="phone-pad"
+        autoComplete={isSelf ? "tel" : "off"}
+      />
+      <Field
+        label="Instagram"
+        {...text("instagram")}
+        placeholder="@yourhandle or a link"
+        autoCapitalize="none"
+        autoCorrect={false}
+      />
+      <Field
+        label="Facebook"
+        {...text("facebook")}
+        placeholder="Profile or page name, or a link"
+        autoCapitalize="none"
+        autoCorrect={false}
+      />
+      <Field
+        label="MorphMarket"
+        {...text("morph_market")}
+        placeholder="Store name or a link"
+        autoCapitalize="none"
+        autoCorrect={false}
+      />
+      <Field
+        label="Website"
+        {...text("website")}
+        placeholder="yourbusiness.com"
+        keyboardType="url"
+        autoCapitalize="none"
+        autoCorrect={false}
       />
 
       <SectionTitle>Background</SectionTitle>
