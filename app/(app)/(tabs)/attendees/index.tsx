@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AttendeeList } from "@/components/AttendeeList";
+import { AttendeeStrip } from "@/components/AttendeeStrip";
 import { EventList } from "@/components/EventList";
 import { TabSwitcher } from "@/components/profile";
 import { QuestionOverview } from "@/components/QuestionOverview";
@@ -51,6 +52,7 @@ export default function Attendees() {
     const header = (
       <View style={{ gap: spacing.md }}>
         <Header title={`${data.event.name} Attendees`} logoSize={72} />
+        <AttendeeStrip attendees={data.attendees} />
         <TabSwitcher<View_>
           tabs={[
             { id: "people", label: "People" },
