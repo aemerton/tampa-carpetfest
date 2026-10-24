@@ -48,6 +48,30 @@ npx expo start
 
 Then press `w` to open it in a browser. To try it on a phone, scan the QR code with the **Expo Go** app.
 
+## Deploying to tampacarpetfest.com
+
+Every push to `main` builds the website and uploads it to DreamHost automatically (`.github/workflows/deploy.yml`). Progress and errors show in the repo's **Actions** tab, where you can also re-run a deploy by hand.
+
+One-time setup:
+
+1. **DreamHost: SSH user.** Under **Websites → Manage Websites**, check which user owns tampacarpetfest.com and its web folder (usually `/home/USER/tampacarpetfest.com`). Under **Users**, make sure that user has **SSH** access turned on.
+2. **DreamHost: HTTPS.** Turn on the free Let's Encrypt certificate for the domain. The site forces `https://`, so this needs to be on.
+3. **Deploy key.** On your computer:
+   ```bash
+   ssh-keygen -t ed25519 -f carpetfest_deploy -N "" -C "github-deploy"
+   ssh-copy-id -i carpetfest_deploy.pub USER@SERVER
+   ```
+   `SERVER` is the DreamHost server name (for example `iad1-shared-b7-01.dreamhost.com`); the domain itself also works once DNS points at DreamHost.
+4. **GitHub secrets.** In the repo, go to **Settings → Secrets and variables → Actions** and add:
+   - `DREAMHOST_HOST`: the server name from step 3
+   - `DREAMHOST_USER`: the SSH user
+   - `DREAMHOST_PATH`: the web folder, e.g. `/home/USER/tampacarpetfest.com`
+   - `DREAMHOST_SSH_KEY`: the full contents of the private `carpetfest_deploy` file
+5. **Lockfile.** Commit `package-lock.json` so the server installs exactly the versions you tested with.
+6. **Supabase.** Under **Authentication → URL Configuration**, set the Site URL to `https://tampacarpetfest.com`.
+
+Each deploy replaces everything in the web folder (except `.well-known`), so move anything else that lives there first.
+
 ## Common changes
 
 - **Logo:** admins can upload a new logo in the app under **Manage Event → App settings**. It shows everywhere, including the login screen. `assets/images/logo.png` is the built-in fallback, and `assets/images/icon.png` (1024×1024) is the home-screen app icon, which needs a code change.

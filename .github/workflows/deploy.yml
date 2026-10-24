@@ -1,0 +1,61 @@
+# Builds the web app and uploads it to DreamHost on every push to main.
+# Needs four repository secrets (Settings → Secrets and variables → Actions):
+#   DREAMHOST_HOST      server to connect to, e.g. iad1-shared-b7-01.dreamhost.com
+#   DREAMHOST_USER      the DreamHost SSH user that owns tampacarpetfest.com
+#   DREAMHOST_PATH      the domain's web folder, e.g. /home/USER/tampacarpetfest.com
+#   DREAMHOST_SSH_KEY   private half of the deploy key (the public half goes on DreamHost)
+name: Deploy website
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # lets you re-run a deploy by hand from the Actions tab
+
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install packages
+        run: npm ci
+
+      - name: Build the website
+        run: |
+          cp .env.example .env
+          npx expo export --platform web --output-dir dist
+          cp public/.htaccess dist/.htaccess
+          test -f dist/index.html
+
+      - name: Set up SSH
+        env:
+          SSH_KEY: ${{ secrets.DREAMHOST_SSH_KEY }}
+          HOST: ${{ secrets.DREAMHOST_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+
+      - name: Upload to DreamHost
+        env:
+          HOST: ${{ secrets.DREAMHOST_HOST }}
+          USER: ${{ secrets.DREAMHOST_USER }}
+          DEST: ${{ secrets.DREAMHOST_PATH }}
+        run: |
+          # --delete removes files from old builds; .well-known holds the
+          # HTTPS certificate check and must be left alone.
+          rsync -rlz --delete --checksum \
+            --exclude ".well-known" --exclude ".dh-diag" \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            dist/ "$USER@$HOST:$DEST/"
