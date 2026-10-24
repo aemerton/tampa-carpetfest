@@ -1,0 +1,127 @@
+import { useLocalSearchParams } from "expo-router";
+import { useState } from "react";
+import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Avatar, InfoRow, TabSwitcher, YearBadges } from "@/components/profile";
+import { Card, ErrorText, Loading, Muted, SectionTitle } from "@/components/ui";
+import { useScreenData } from "@/lib/data";
+import { supabase } from "@/lib/supabase";
+import { colors, radius, spacing } from "@/lib/theme";
+import type { Profile } from "@/lib/types";
+
+type Tab = "background" | "petReptile" | "otherPet";
+
+export default function AttendeeProfile() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const [tab, setTab] = useState<Tab>("background");
+  const { data: p, error } = useScreenData(async () => {
+    const { data, error } = await supabase.from("profiles").select("*").eq("id", id).single();
+    if (error) throw error;
+    return data as Profile;
+  }, [id]);
+
+  if (error) {
+    return (
+      <View style={styles.page}>
+        <ErrorText>Couldn't find this attendee.</ErrorText>
+      </View>
+    );
+  }
+  if (!p) return <Loading />;
+
+  const years = [...p.years_attended].sort((a, b) => a - b);
+
+  return (
+    <ScrollView style={{ backgroundColor: colors.bg }} contentContainerStyle={styles.page}>
+      <View style={styles.top}>
+        <Avatar uri={p.photo_url} name={p.full_name} size={120} glowing />
+        <Text style={styles.name}>{p.full_name}</Text>
+        {p.business_name ? <Text style={styles.business}>{p.business_name}</Text> : null}
+        {p.city_state ? <Muted>{p.city_state}</Muted> : null}
+      </View>
+
+      {p.bio ? <Text style={styles.bio}>{p.bio}</Text> : null}
+
+      <TabSwitcher<Tab>
+        tabs={[
+          { id: "background", label: "Background" },
+          { id: "petReptile", label: "Pet Reptile" },
+          { id: "otherPet", label: "Other Pet" },
+        ]}
+        active={tab}
+        onChange={setTab}
+      />
+
+      <Card>
+        {tab === "background" ? (
+          p.favorite_species || p.first_snake || p.place_to_visit ? (
+            <>
+              <InfoRow label="Favorite species" value={p.favorite_species} />
+              <InfoRow label="First snake" value={p.first_snake} />
+              <InfoRow label="Dream place to visit" value={p.place_to_visit} />
+            </>
+          ) : (
+            <Muted>Nothing added yet.</Muted>
+          )
+        ) : null}
+
+        {tab === "petReptile" ? (
+          p.pet_reptile_name || p.pet_reptile_species || p.pet_reptile_photo_url ? (
+            <>
+              {p.pet_reptile_photo_url ? (
+                <Image source={{ uri: p.pet_reptile_photo_url }} style={styles.petPhoto} />
+              ) : null}
+              <InfoRow label="Name" value={p.pet_reptile_name} />
+              <InfoRow label="Species" value={p.pet_reptile_species} />
+              <InfoRow label="Morph" value={p.pet_reptile_morph} />
+            </>
+          ) : (
+            <Muted>Nothing added yet.</Muted>
+          )
+        ) : null}
+
+        {tab === "otherPet" ? (
+          p.other_pet_name || p.other_pet_type || p.other_pet_photo_url ? (
+            <>
+              {p.other_pet_photo_url ? (
+                <Image source={{ uri: p.other_pet_photo_url }} style={styles.petPhoto} />
+              ) : null}
+              <InfoRow label="Name" value={p.other_pet_name} />
+              <InfoRow label="Type" value={p.other_pet_type} />
+            </>
+          ) : (
+            <Muted>Nothing added yet.</Muted>
+          )
+        ) : null}
+      </Card>
+
+      {years.length ? (
+        <>
+          <SectionTitle>CarpetFests attended</SectionTitle>
+          <YearBadges years={years} />
+        </>
+      ) : null}
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  page: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xl * 2,
+    gap: spacing.md,
+    width: "100%",
+    maxWidth: 560,
+    alignSelf: "center",
+    backgroundColor: colors.bg,
+  },
+  top: { alignItems: "center", gap: spacing.xs, paddingVertical: spacing.md },
+  name: { color: colors.accent, fontSize: 24, fontWeight: "700", marginTop: spacing.md },
+  business: { color: colors.text, fontSize: 17, fontWeight: "600" },
+  bio: { color: colors.text, fontSize: 16, lineHeight: 23 },
+  petPhoto: {
+    width: "100%",
+    aspectRatio: 1,
+    borderRadius: radius.md,
+    marginBottom: spacing.sm,
+  },
+});

@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Tampa CarpetFest",
+    "slug": "tampa-carpetfest",
+    "scheme": "carpetfest",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#1A1F14",
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#1A1F14"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/images/favicon.png",
+      "name": "Tampa CarpetFest 2027",
+      "shortName": "CarpetFest",
+      "themeColor": "#9ACD32",
+      "backgroundColor": "#1A1F14"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "CarpetFest uses your photos so you can add a profile picture and photos of your animals."
+        }
+      ]
+    ]
+  }
+}
