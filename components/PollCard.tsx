@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { Card, ErrorText, Muted } from "@/components/ui";
 import { useScreenData } from "@/lib/data";
@@ -24,11 +25,55 @@ export function PollCard({
   const { data, error, refresh } = useScreenData(() => loadPoll(eventId, userId), [eventId, userId]);
   const [pending, setPending] = useState<string | null>(null);
   const [voteError, setVoteError] = useState("");
+  const [collapsed, setCollapsed] = useState(false);
+  const pollId = data?.poll.id;
+
+  // Remember on this device whether the person minimized this poll.
+  useEffect(() => {
+    if (!pollId) return;
+    AsyncStorage.getItem(collapseKey(pollId))
+      .then((v) => setCollapsed(v === "1"))
+      .catch(() => {});
+  }, [pollId]);
+
+  function setMinimized(value: boolean) {
+    setCollapsed(value);
+    if (!pollId) return;
+    const key = collapseKey(pollId);
+    (value ? AsyncStorage.setItem(key, "1") : AsyncStorage.removeItem(key)).catch(() => {});
+  }
 
   if (!data) return error ? <ErrorText>{error}</ErrorText> : null;
 
   const { poll, options, myVote, results, total } = data;
   const voting = poll.is_open && canVote;
+  // Only people who can see the results (voters and admins) can minimize.
+  const canMinimize = !!results;
+
+  if (canMinimize && collapsed) {
+    return (
+      <Pressable
+        onPress={() => setMinimized(false)}
+        accessibilityRole="button"
+        accessibilityLabel={`Expand poll: ${poll.question}`}
+        style={({ pressed }) => [styles.mini, pressed && { opacity: 0.7 }]}
+      >
+        <View style={styles.tag}>
+          <Ionicons name="stats-chart" size={12} color={colors.onAccent} />
+          <Text style={styles.tagText}>POLL</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.miniQuestion} numberOfLines={1}>
+            {poll.question}
+          </Text>
+          <Text style={styles.miniSummary} numberOfLines={1}>
+            {summary(data)}
+          </Text>
+        </View>
+        <Ionicons name="chevron-down" size={20} color={colors.accent} />
+      </Pressable>
+    );
+  }
 
   async function vote(option: PollOption) {
     if (!voting || pending || option.id === myVote) return;
@@ -53,7 +98,20 @@ export function PollCard({
           <Ionicons name="stats-chart" size={12} color={colors.onAccent} />
           <Text style={styles.tagText}>POLL</Text>
         </View>
-        {!poll.is_open ? <Muted>Voting closed</Muted> : null}
+        <View style={styles.tagRight}>
+          {!poll.is_open ? <Muted>Voting closed</Muted> : null}
+          {canMinimize ? (
+            <Pressable
+              onPress={() => setMinimized(true)}
+              hitSlop={10}
+              accessibilityLabel="Minimize poll"
+              style={styles.minimize}
+            >
+              <Text style={styles.minimizeText}>Minimize</Text>
+              <Ionicons name="chevron-up" size={16} color={colors.accent} />
+            </Pressable>
+          ) : null}
+        </View>
       </View>
       <Text style={styles.question}>{poll.question}</Text>
 
@@ -133,7 +191,39 @@ function OptionRow({
   );
 }
 
+const collapseKey = (pollId: string) => `carpetfest.pollCollapsed.${pollId}`;
+
+/** One-line summary for the minimized poll: who's leading and your vote. */
+function summary({ options, results, myVote, total, poll }: PollState): string {
+  if (!results || !total) return "No votes yet";
+  const top = Math.max(...options.map((o) => results[o.id] ?? 0));
+  const leaders = options.filter((o) => (results[o.id] ?? 0) === top);
+  const pct = Math.round((top / total) * 100);
+  const lead =
+    leaders.length > 1
+      ? `Tied: ${leaders.map((o) => o.label).join(" & ")}`
+      : `${poll.is_open ? "Leading" : "Winner"}: ${leaders[0].label} ${pct}%`;
+  const mine = options.find((o) => o.id === myVote);
+  return mine ? `${lead} · You: ${mine.label}` : lead;
+}
+
 const styles = StyleSheet.create({
+  tagRight: { flexDirection: "row", alignItems: "center", gap: spacing.md },
+  minimize: { flexDirection: "row", alignItems: "center", gap: 2 },
+  minimizeText: { color: colors.accent, fontSize: 13, fontWeight: "600" },
+  mini: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  miniQuestion: { color: colors.text, fontSize: 14, fontWeight: "600" },
+  miniSummary: { color: colors.textMuted, fontSize: 12 },
   card: { borderWidth: 1, borderColor: colors.accent, gap: spacing.md },
   tagRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   tag: {
