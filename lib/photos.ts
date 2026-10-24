@@ -32,3 +32,20 @@ export async function pickAndUploadPhoto(
 
   return supabase.storage.from("photos").getPublicUrl(path).data.publicUrl;
 }
+
+const PUBLIC_PREFIX = "/storage/v1/object/public/photos/";
+
+/**
+ * Deletes photo files (given by their public URLs) from storage, so removed
+ * or replaced photos stop being reachable by link. Failures are ignored:
+ * a leftover file is harmless compared to blocking a save.
+ */
+export async function deletePhotos(urls: string[]) {
+  const paths = urls
+    .map((url) => {
+      const i = url.indexOf(PUBLIC_PREFIX);
+      return i === -1 ? null : decodeURIComponent(url.slice(i + PUBLIC_PREFIX.length));
+    })
+    .filter((p): p is string => !!p);
+  if (paths.length) await supabase.storage.from("photos").remove(paths);
+}

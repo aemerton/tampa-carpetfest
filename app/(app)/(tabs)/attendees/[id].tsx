@@ -1,8 +1,10 @@
-import { useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Avatar, InfoRow, TabSwitcher, YearBadges } from "@/components/profile";
 import { Card, ErrorText, Loading, Muted, SectionTitle } from "@/components/ui";
+import { useIsAdmin } from "@/lib/auth";
 import { useScreenData } from "@/lib/data";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
@@ -13,6 +15,7 @@ type Tab = "background" | "petReptile" | "otherPet";
 export default function AttendeeProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [tab, setTab] = useState<Tab>("background");
+  const isAdmin = useIsAdmin();
   const { data: p, error } = useScreenData(async () => {
     const { data, error } = await supabase.from("profiles").select("*").eq("id", id).single();
     if (error) throw error;
@@ -32,6 +35,24 @@ export default function AttendeeProfile() {
 
   return (
     <ScrollView style={{ backgroundColor: colors.bg }} contentContainerStyle={styles.page}>
+      <Stack.Screen
+        options={{
+          headerRight: isAdmin
+            ? () => (
+                <Pressable
+                  hitSlop={10}
+                  style={styles.manage}
+                  onPress={() =>
+                    router.push({ pathname: "/manage-profile", params: { id: p.id } })
+                  }
+                >
+                  <Ionicons name="create-outline" size={18} color={colors.onAccent} />
+                  <Text style={styles.manageText}>Manage</Text>
+                </Pressable>
+              )
+            : undefined,
+        }}
+      />
       <View style={styles.top}>
         <Avatar uri={p.photo_url} name={p.full_name} size={120} glowing />
         <Text style={styles.name}>{p.full_name}</Text>
@@ -114,6 +135,17 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     backgroundColor: colors.bg,
   },
+  manage: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: colors.accent,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    marginRight: 8,
+  },
+  manageText: { color: colors.onAccent, fontWeight: "700", fontSize: 14 },
   top: { alignItems: "center", gap: spacing.xs, paddingVertical: spacing.md },
   name: { color: colors.accent, fontSize: 24, fontWeight: "700", marginTop: spacing.md },
   business: { color: colors.text, fontSize: 17, fontWeight: "600" },

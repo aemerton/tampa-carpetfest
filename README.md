@@ -11,10 +11,11 @@ Built with Expo (Expo Router) for the app and Supabase for logins, data, and pho
 - **Itinerary.** The event schedule, grouped by day.
 - **Attendees.** Searchable list of everyone, by name, business, species, or city. Tap anyone to see their profile, with Background, Pet Reptile, and Other Pet tabs plus the CarpetFests they've attended.
 - **My Profile.** Edit your own details and photos, and log out.
+- **Admin tools.** Admins can post announcements, manage the itinerary, and use the **Manage** button on any attendee's profile to fix or remove anything on it. Removed photos are deleted from storage.
 
 ## One-time Supabase setup
 
-1. **Create the database.** In the Supabase dashboard, open **SQL Editor → New query**. Paste in the contents of `supabase/migrations/0001_init.sql` and click **Run**. Run it only once.
+1. **Create the database.** In the Supabase dashboard, open **SQL Editor → New query**. Paste in each file from `supabase/migrations/`, in number order, and click **Run**. Run each file only once. When a new numbered file shows up after a `git pull`, run just that one.
 2. **Turn off email confirmation for now.** Go to **Authentication → Sign In / Providers → Email** and switch off **Confirm email**. Supabase's built-in email service only sends to your own team's addresses, so attendees would never get the link. Turn it back on once Resend is connected.
 3. **Make the admin account.** Sign up in the app with the admin's email, then run this in the SQL Editor:
    ```sql
