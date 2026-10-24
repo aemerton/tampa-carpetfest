@@ -5,7 +5,7 @@ import { DateInput, TimeInput } from "@/components/DateTimeInputs";
 import { Button, ErrorText, Field, Loading, Muted, Screen } from "@/components/ui";
 import { useIsAdmin } from "@/lib/auth";
 import { combine, toDateStr, toTimeStr } from "@/lib/datetime";
-import { confirm } from "@/lib/dialogs";
+import { confirm, notify } from "@/lib/dialogs";
 import { supabase } from "@/lib/supabase";
 import { spacing } from "@/lib/theme";
 
@@ -104,7 +104,10 @@ export default function EventEditor() {
       : await supabase.from("itinerary_items").insert({ ...values, event_id: eventId });
     setBusy(false);
     if (error) setError(error.message);
-    else close();
+    else {
+      notify(id ? "Itinerary item updated." : "Added to the itinerary.");
+      close();
+    }
   }
 
   async function remove() {
@@ -113,7 +116,10 @@ export default function EventEditor() {
     const { error } = await supabase.from("itinerary_items").delete().eq("id", id!);
     setBusy(false);
     if (error) setError(error.message);
-    else close();
+    else {
+      notify("Itinerary item deleted.");
+      close();
+    }
   }
 
   return (

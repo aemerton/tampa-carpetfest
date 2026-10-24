@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Button, ErrorText, Field, Loading, Muted, Screen } from "@/components/ui";
 import { useIsAdmin } from "@/lib/auth";
-import { confirm } from "@/lib/dialogs";
+import { confirm, notify } from "@/lib/dialogs";
 import { supabase } from "@/lib/supabase";
 
 function close() {
@@ -63,7 +63,10 @@ export default function AnnouncementEditor() {
       : await supabase.from("announcements").insert({ ...values, event_id: eventId });
     setBusy(false);
     if (error) setError(error.message);
-    else close();
+    else {
+      notify(id ? "Announcement updated." : "Announcement posted.");
+      close();
+    }
   }
 
   async function remove() {
@@ -72,7 +75,10 @@ export default function AnnouncementEditor() {
     const { error } = await supabase.from("announcements").delete().eq("id", id!);
     setBusy(false);
     if (error) setError(error.message);
-    else close();
+    else {
+      notify("Announcement deleted.");
+      close();
+    }
   }
 
   return (

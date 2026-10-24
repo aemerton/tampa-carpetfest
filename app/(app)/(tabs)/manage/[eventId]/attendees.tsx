@@ -4,7 +4,7 @@ import { Pressable, Text } from "react-native";
 import { AttendeeList } from "@/components/AttendeeList";
 import { Muted } from "@/components/ui";
 import { useScreenData } from "@/lib/data";
-import { confirm } from "@/lib/dialogs";
+import { confirm, notify } from "@/lib/dialogs";
 import { friendlyError, loadEvent, loadEventAttendees } from "@/lib/events";
 import { supabase } from "@/lib/supabase";
 import { colors } from "@/lib/theme";
@@ -36,6 +36,7 @@ export default function ManageAttendees() {
       p_attended: false,
     });
     if (error) setActionError(friendlyError(error));
+    else notify(`${a.full_name} was removed from the list.`);
     refresh();
   }
 

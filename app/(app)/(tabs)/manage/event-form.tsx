@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, Switch, Text, View } from "react-native";
 import { Button, Card, ErrorText, Field, Loading, Muted, Screen } from "@/components/ui";
+import { notify } from "@/lib/dialogs";
 import { friendlyError } from "@/lib/events";
 import { supabase } from "@/lib/supabase";
 import { colors, spacing } from "@/lib/theme";
@@ -52,7 +53,10 @@ export default function EventForm() {
       });
       setBusy(false);
       if (error) setError(friendlyError(error));
-      else router.back();
+      else {
+        notify("Event details saved.");
+        router.back();
+      }
     } else {
       const { data, error } = await supabase.rpc("create_event", {
         p_name: name,
@@ -62,7 +66,13 @@ export default function EventForm() {
       setBusy(false);
       if (error) setError(friendlyError(error));
       // Straight on to setting up the schedule.
-      else router.replace({ pathname: "/manage/[eventId]/itinerary", params: { eventId: data, isNew: "1" } });
+      else {
+        notify(`${name.trim()} created!`);
+        router.replace({
+          pathname: "/manage/[eventId]/itinerary",
+          params: { eventId: data, isNew: "1" },
+        });
+      }
     }
   }
 
