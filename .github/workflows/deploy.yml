@@ -4,6 +4,7 @@
 #   DREAMHOST_USER      the DreamHost SSH user that owns tampacarpetfest.com
 #   DREAMHOST_PATH      the domain's web folder, e.g. /home/USER/tampacarpetfest.com
 #   DREAMHOST_SSH_KEY   private half of the deploy key (the public half goes on DreamHost)
+#   DREAMHOST_PORT      optional; SSH port if it isn't 22
 name: Deploy website
 
 on:
@@ -41,21 +42,23 @@ jobs:
         env:
           SSH_KEY: ${{ secrets.DREAMHOST_SSH_KEY }}
           HOST: ${{ secrets.DREAMHOST_HOST }}
+          PORT: ${{ secrets.DREAMHOST_PORT }}
         run: |
           mkdir -p ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+          ssh-keyscan -p "${PORT:-22}" -H "$HOST" >> ~/.ssh/known_hosts
 
       - name: Upload to DreamHost
         env:
           HOST: ${{ secrets.DREAMHOST_HOST }}
           USER: ${{ secrets.DREAMHOST_USER }}
           DEST: ${{ secrets.DREAMHOST_PATH }}
+          PORT: ${{ secrets.DREAMHOST_PORT }}
         run: |
           # --delete removes files from old builds; .well-known holds the
           # HTTPS certificate check and must be left alone.
           rsync -rlz --delete --checksum \
             --exclude ".well-known" --exclude ".dh-diag" \
-            -e "ssh -i ~/.ssh/deploy_key" \
+            -e "ssh -i ~/.ssh/deploy_key -p ${PORT:-22}" \
             dist/ "$USER@$HOST:$DEST/"
