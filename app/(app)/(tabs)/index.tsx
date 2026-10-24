@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -88,6 +89,22 @@ export default function Home() {
               </Card>
             ) : null}
 
+            <Pressable
+              onPress={() =>
+                router.navigate({ pathname: "/attendees", params: { view: "answers" } })
+              }
+              style={({ pressed }) => [pressed && { opacity: 0.8 }]}
+            >
+              <Card style={styles.getToKnow}>
+                <Ionicons name="albums" size={28} color={colors.accent} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.cardTitle}>Get to know everyone</Text>
+                  <Muted>Pick a question and swipe through how other attendees answered.</Muted>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+              </Card>
+            </Pressable>
+
             <SectionTitle>Announcements</SectionTitle>
             {isAdmin ? (
               <Button
@@ -173,4 +190,5 @@ const styles = StyleSheet.create({
   edit: { color: colors.accent, fontSize: 14, fontWeight: "600", textDecorationLine: "underline" },
   body: { color: colors.text, fontSize: 16, lineHeight: 23 },
   highlight: { borderWidth: 1, borderColor: colors.accent },
+  getToKnow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
 });

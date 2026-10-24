@@ -21,6 +21,7 @@ export default function AttendeesStack() {
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="previous" options={{ headerTitle: "Previous events" }} />
       <Stack.Screen name="event/[eventId]" />
+      <Stack.Screen name="question/[questionId]" />
       <Stack.Screen name="[id]" />
     </Stack>
   );

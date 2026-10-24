@@ -1,5 +1,38 @@
+import { loadEventAttendees } from "./events";
 import { supabase } from "./supabase";
-import type { ProfileQuestion } from "./types";
+import type { ProfileQuestion, ProfileSummary } from "./types";
+
+export type AnswerCard = { person: ProfileSummary; answer: string };
+export type QuestionWithAnswers = ProfileQuestion & { answers: AnswerCard[] };
+
+/**
+ * Every shown question with the answers from people registered for one
+ * event. Only people on that event's attendee list are included.
+ */
+export async function loadEventAnswers(eventId: string): Promise<QuestionWithAnswers[]> {
+  const [questions, attendees] = await Promise.all([
+    loadQuestions(),
+    loadEventAttendees(eventId),
+  ]);
+  if (!attendees.length) return questions.map((q) => ({ ...q, answers: [] }));
+
+  const people = new Map(attendees.map((p) => [p.id, p]));
+  const { data, error } = await supabase
+    .from("profile_answers")
+    .select("profile_id, question_id, answer")
+    .in("profile_id", [...people.keys()]);
+  if (error) throw error;
+
+  const byQuestion = new Map<string, AnswerCard[]>();
+  for (const row of data ?? []) {
+    const person = people.get(row.profile_id);
+    if (!person) continue;
+    const list = byQuestion.get(row.question_id) ?? [];
+    list.push({ person, answer: row.answer });
+    byQuestion.set(row.question_id, list);
+  }
+  return questions.map((q) => ({ ...q, answers: byQuestion.get(q.id) ?? [] }));
+}
 
 /** Questions in display order. Pass `includeHidden` for the admin list. */
 export async function loadQuestions(includeHidden = false): Promise<ProfileQuestion[]> {

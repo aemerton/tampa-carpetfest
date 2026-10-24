@@ -6,7 +6,7 @@ import { Avatar, EventBadges, InfoRow, TabSwitcher } from "@/components/profile"
 import { Card, ErrorText, Loading, Muted, SectionTitle } from "@/components/ui";
 import { useIsAdmin } from "@/lib/auth";
 import { useScreenData } from "@/lib/data";
-import { loadPastEvents } from "@/lib/events";
+import { loadActiveEvent, loadPastEvents } from "@/lib/events";
 import { loadAnswers, loadQuestions } from "@/lib/questions";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
@@ -19,18 +19,21 @@ export default function AttendeeProfile() {
   const [tab, setTab] = useState<Tab>("background");
   const isAdmin = useIsAdmin();
   const { data, error } = useScreenData(async () => {
-    const [profile, past, questions, answers] = await Promise.all([
+    const [profile, past, questions, answers, active] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", id).single(),
       loadPastEvents(id),
       loadQuestions(),
       loadAnswers(id),
+      loadActiveEvent(id),
     ]);
     if (profile.error) throw profile.error;
     // Only the questions this person answered, in the current order.
     const qa = questions
       .filter((q) => answers[q.id])
       .map((q) => ({ id: q.id, prompt: q.prompt, answer: answers[q.id] }));
-    return { p: profile.data as Profile, badges: past.map((e) => e.name), qa };
+    // Answers open the swipe deck only for people on the active event's list.
+    const deckEventId = active.event && active.registered ? active.event.id : null;
+    return { p: profile.data as Profile, badges: past.map((e) => e.name), qa, deckEventId };
   }, [id]);
 
   if (error) {
@@ -41,7 +44,7 @@ export default function AttendeeProfile() {
     );
   }
   if (!data) return <Loading />;
-  const { p, badges, qa } = data;
+  const { p, badges, qa, deckEventId } = data;
 
   return (
     <ScrollView style={{ backgroundColor: colors.bg }} contentContainerStyle={styles.page}>
@@ -127,12 +130,34 @@ export default function AttendeeProfile() {
 
         {tab === "qa" ? (
           qa.length ? (
-            qa.map((item, i) => (
-              <View key={item.id} style={[styles.qa, i > 0 && styles.qaDivider]}>
-                <Text style={styles.question}>{item.prompt}</Text>
-                <Text style={styles.answer}>{item.answer}</Text>
-              </View>
-            ))
+            <>
+              {deckEventId ? <Muted>Tap a question to see how everyone else answered.</Muted> : null}
+              {qa.map((item, i) => (
+                <Pressable
+                  key={item.id}
+                  disabled={!deckEventId}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/attendees/question/[questionId]",
+                      params: { questionId: item.id, eventId: deckEventId!, start: p.id },
+                    })
+                  }
+                  style={({ pressed }) => [
+                    styles.qa,
+                    i > 0 && styles.qaDivider,
+                    pressed && { opacity: 0.6 },
+                  ]}
+                >
+                  <View style={styles.qaHeader}>
+                    <Text style={[styles.question, { flex: 1 }]}>{item.prompt}</Text>
+                    {deckEventId ? (
+                      <Ionicons name="albums-outline" size={16} color={colors.accent} />
+                    ) : null}
+                  </View>
+                  <Text style={styles.answer}>{item.answer}</Text>
+                </Pressable>
+              ))}
+            </>
           ) : (
             <Muted>No answers yet.</Muted>
           )
@@ -151,6 +176,7 @@ export default function AttendeeProfile() {
 
 const styles = StyleSheet.create({
   qa: { gap: 4, paddingVertical: spacing.sm },
+  qaHeader: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm },
   qaDivider: { borderTopWidth: 1, borderTopColor: colors.border },
   question: { color: colors.textMuted, fontSize: 14, lineHeight: 20 },
   answer: { color: colors.text, fontSize: 16, lineHeight: 23 },
