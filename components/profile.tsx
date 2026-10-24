@@ -71,31 +71,40 @@ export function TabSwitcher<T extends string>({
   );
 }
 
-/** Year chips. Read-only by default; pass `selected` + `onToggle` to make them pickable. */
-export function YearBadges({
-  years,
-  selected,
-  onToggle,
+/** Badges for events someone attended. */
+export function EventBadges({ names }: { names: string[] }) {
+  return (
+    <View style={styles.badges}>
+      {names.map((name) => (
+        <View key={name} style={[styles.badge, styles.badgeOn, styles.badgeRow]}>
+          <Ionicons name="ribbon" size={14} color={colors.accent} />
+          <Text style={styles.badgeText}>{name}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** A row of pill buttons where exactly one is selected (e.g. Yes / No). */
+export function ChoiceChips<T extends string | boolean>({
+  options,
+  value,
+  onChange,
 }: {
-  years: number[];
-  selected?: number[];
-  onToggle?: (year: number) => void;
+  options: { value: T; label: string }[];
+  value: T | null;
+  onChange: (value: T) => void;
 }) {
   return (
     <View style={styles.badges}>
-      {years.map((year) => {
-        const on = selected ? selected.includes(year) : true;
-        const chip = (
-          <View style={[styles.badge, on ? styles.badgeOn : styles.badgeOff]}>
-            <Text style={[styles.badgeText, !on && { color: colors.textMuted }]}>{year}</Text>
-          </View>
-        );
-        return onToggle ? (
-          <Pressable key={year} onPress={() => onToggle(year)}>
-            {chip}
+      {options.map((o) => {
+        const on = o.value === value;
+        return (
+          <Pressable key={String(o.value)} onPress={() => onChange(o.value)}>
+            <View style={[styles.badge, on ? styles.badgeOn : styles.badgeOff, styles.choice]}>
+              <Text style={[styles.badgeText, !on && { color: colors.textMuted }]}>{o.label}</Text>
+            </View>
           </Pressable>
-        ) : (
-          <View key={year}>{chip}</View>
         );
       })}
     </View>
@@ -136,6 +145,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 1,
   },
+  badgeRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  choice: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
   badgeOn: { backgroundColor: colors.surface, borderColor: colors.accent },
   badgeOff: { backgroundColor: "transparent", borderColor: colors.border },
   badgeText: { color: colors.accent, fontSize: 13, fontWeight: "600" },

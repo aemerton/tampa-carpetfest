@@ -15,7 +15,8 @@ function close() {
 }
 
 export default function EventEditor() {
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  // `id` edits an existing item; `eventId` creates one for that event.
+  const { id, eventId } = useLocalSearchParams<{ id?: string; eventId?: string }>();
   const isAdmin = useIsAdmin();
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
@@ -48,17 +49,20 @@ export default function EventEditor() {
       } else {
         // New item: default to the same day as the latest item, so adding a
         // whole day's schedule doesn't mean re-picking the date every time.
-        const { data } = await supabase
-          .from("itinerary_items")
-          .select("starts_at")
-          .order("starts_at", { ascending: false })
-          .limit(1);
+        const { data } = eventId
+          ? await supabase
+              .from("itinerary_items")
+              .select("starts_at")
+              .eq("event_id", eventId)
+              .order("starts_at", { ascending: false })
+              .limit(1)
+          : { data: null };
         setDate(toDateStr(data?.[0] ? new Date(data[0].starts_at) : new Date()));
       }
       setLoaded(true);
     }
     load();
-  }, [id]);
+  }, [id, eventId]);
 
   if (!isAdmin) {
     return (
@@ -71,6 +75,10 @@ export default function EventEditor() {
 
   async function save() {
     setError("");
+    if (!id && !eventId) {
+      setError("Open this from an event to add items to it.");
+      return;
+    }
     if (!title.trim() || !date || !start) {
       setError("Add a title, a date, and a start time.");
       return;
@@ -93,7 +101,7 @@ export default function EventEditor() {
     };
     const { error } = id
       ? await supabase.from("itinerary_items").update(values).eq("id", id)
-      : await supabase.from("itinerary_items").insert(values);
+      : await supabase.from("itinerary_items").insert({ ...values, event_id: eventId });
     setBusy(false);
     if (error) setError(error.message);
     else close();

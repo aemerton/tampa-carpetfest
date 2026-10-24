@@ -31,7 +31,7 @@ export default function SignUp() {
       });
       if (codeErr) throw codeErr;
       if (!codeOk) {
-        setError("That invite code isn't valid. Check with the event host.");
+        setError("That code isn't valid, or registration isn't open right now. Check with the event host.");
         return;
       }
 
@@ -50,7 +50,7 @@ export default function SignUp() {
       if (/already registered/i.test(msg)) {
         setError("An account with that email already exists. Try logging in.");
       } else if (/database error/i.test(msg)) {
-        setError("That invite code isn't valid. Check with the event host.");
+        setError("That code isn't valid, or registration isn't open right now. Check with the event host.");
       } else {
         setError(msg);
       }
@@ -102,7 +102,7 @@ export default function SignUp() {
         textContentType="newPassword"
       />
       <Field
-        label="Invite code"
+        label="Event code"
         value={inviteCode}
         onChangeText={setInviteCode}
         autoCapitalize="none"

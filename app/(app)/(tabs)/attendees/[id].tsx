@@ -2,10 +2,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Avatar, InfoRow, TabSwitcher, YearBadges } from "@/components/profile";
+import { Avatar, EventBadges, InfoRow, TabSwitcher } from "@/components/profile";
 import { Card, ErrorText, Loading, Muted, SectionTitle } from "@/components/ui";
 import { useIsAdmin } from "@/lib/auth";
 import { useScreenData } from "@/lib/data";
+import { loadPastEvents } from "@/lib/events";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
 import type { Profile } from "@/lib/types";
@@ -16,10 +17,13 @@ export default function AttendeeProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [tab, setTab] = useState<Tab>("background");
   const isAdmin = useIsAdmin();
-  const { data: p, error } = useScreenData(async () => {
-    const { data, error } = await supabase.from("profiles").select("*").eq("id", id).single();
-    if (error) throw error;
-    return data as Profile;
+  const { data, error } = useScreenData(async () => {
+    const [profile, past] = await Promise.all([
+      supabase.from("profiles").select("*").eq("id", id).single(),
+      loadPastEvents(id),
+    ]);
+    if (profile.error) throw profile.error;
+    return { p: profile.data as Profile, badges: past.map((e) => e.name) };
   }, [id]);
 
   if (error) {
@@ -29,9 +33,8 @@ export default function AttendeeProfile() {
       </View>
     );
   }
-  if (!p) return <Loading />;
-
-  const years = [...p.years_attended].sort((a, b) => a - b);
+  if (!data) return <Loading />;
+  const { p, badges } = data;
 
   return (
     <ScrollView style={{ backgroundColor: colors.bg }} contentContainerStyle={styles.page}>
@@ -115,10 +118,10 @@ export default function AttendeeProfile() {
         ) : null}
       </Card>
 
-      {years.length ? (
+      {badges.length ? (
         <>
           <SectionTitle>CarpetFests attended</SectionTitle>
-          <YearBadges years={years} />
+          <EventBadges names={badges} />
         </>
       ) : null}
     </ScrollView>

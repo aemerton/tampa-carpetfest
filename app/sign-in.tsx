@@ -1,7 +1,6 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { Button, ErrorText, Field, Header, Muted, Screen } from "@/components/ui";
-import { EVENT_YEAR } from "@/lib/constants";
 import { supabase } from "@/lib/supabase";
 
 export default function SignIn() {
@@ -34,7 +33,7 @@ export default function SignIn() {
 
   return (
     <Screen>
-      <Header title={`Tampa CarpetFest ${EVENT_YEAR}`} logoSize={140} />
+      <Header title="Tampa CarpetFest" logoSize={140} />
       <Field
         label="Email"
         value={email}

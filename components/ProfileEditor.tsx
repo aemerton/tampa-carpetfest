@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { Avatar, YearBadges } from "@/components/profile";
+import { Avatar, ChoiceChips } from "@/components/profile";
 import {
   Button,
   Card,
@@ -11,12 +11,11 @@ import {
   Screen,
   SectionTitle,
 } from "@/components/ui";
-import { PAST_EVENT_YEARS } from "@/lib/constants";
 import { notify } from "@/lib/dialogs";
 import { deletePhotos, pickAndUploadPhoto, type PhotoKind } from "@/lib/photos";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
-import type { EditableProfile, Profile } from "@/lib/types";
+import type { CarpetEvent, EditableProfile, Profile } from "@/lib/types";
 
 const EDITABLE_KEYS: (keyof EditableProfile)[] = [
   "full_name",
@@ -34,7 +33,6 @@ const EDITABLE_KEYS: (keyof EditableProfile)[] = [
   "other_pet_name",
   "other_pet_type",
   "other_pet_photo_url",
-  "years_attended",
 ];
 
 const PHOTO_FIELD = {
@@ -67,21 +65,35 @@ export function ProfileEditor({
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState<PhotoKind | null>(null);
+  // "Did you attend?" questions for events from before the app (e.g. 2026).
+  const [askEvents, setAskEvents] = useState<CarpetEvent[]>([]);
+  const [attended, setAttended] = useState<Record<string, boolean>>({});
+  const [savedAttended, setSavedAttended] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", profileId)
-      .single()
-      .then(({ data, error }) => {
-        if (error) setError(error.message);
-        else {
-          const p = pickEditable(data as Profile);
-          setForm(p);
-          setSaved(p);
-        }
-      });
+    async function load() {
+      const [profile, events, rows] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", profileId).single(),
+        supabase.from("events").select("*").eq("allow_self_report", true).order("created_at"),
+        supabase.from("event_attendees").select("event_id").eq("profile_id", profileId),
+      ]);
+      const err = profile.error ?? events.error ?? rows.error;
+      if (err) {
+        setError(err.message);
+        return;
+      }
+      const p = pickEditable(profile.data as Profile);
+      const mine = new Set((rows.data ?? []).map((r) => r.event_id as string));
+      const answers = Object.fromEntries(
+        (events.data as CarpetEvent[]).map((e) => [e.id, mine.has(e.id)])
+      );
+      setAskEvents(events.data as CarpetEvent[]);
+      setAttended(answers);
+      setSavedAttended(answers);
+      setForm(p);
+      setSaved(p);
+    }
+    load();
   }, [profileId]);
 
   if (!form) {
@@ -118,16 +130,6 @@ export function ProfileEditor({
 
   const removePhoto = (kind: PhotoKind) => set(PHOTO_FIELD[kind], null);
 
-  function toggleYear(year: number) {
-    const years = form!.years_attended;
-    set(
-      "years_attended",
-      years.includes(year)
-        ? years.filter((y) => y !== year)
-        : [...years, year].sort((a, b) => a - b)
-    );
-  }
-
   async function save() {
     setError("");
     if (!form!.full_name.trim()) {
@@ -153,6 +155,22 @@ export function ProfileEditor({
       setError(error?.message ?? "You don't have permission to edit this profile.");
       return;
     }
+
+    // Save any changed "Did you attend?" answers.
+    for (const e of askEvents) {
+      if (attended[e.id] === savedAttended[e.id]) continue;
+      const { error } = await supabase.rpc("set_attendance", {
+        p_event: e.id,
+        p_profile: profileId,
+        p_attended: attended[e.id],
+      });
+      if (error) {
+        setSaving(false);
+        setError(`Couldn't save your answer for ${e.name}: ${error.message}`);
+        return;
+      }
+    }
+    setSavedAttended(attended);
 
     // Delete photo files that were removed or replaced.
     const keep = new Set(photoUrls(update));
@@ -226,9 +244,19 @@ export function ProfileEditor({
       <Field label="Name" {...text("other_pet_name")} />
       <Field label="Type of animal" {...text("other_pet_type")} placeholder="Dog, cat…" />
 
-      <SectionTitle>{label("CarpetFests you've attended", "CarpetFests attended")}</SectionTitle>
-      <Muted>Tap each year to turn it on or off.</Muted>
-      <YearBadges years={PAST_EVENT_YEARS} selected={form.years_attended} onToggle={toggleYear} />
+      {askEvents.map((e) => (
+        <View key={e.id} style={{ gap: spacing.sm }}>
+          <SectionTitle>{label(`Did you attend ${e.name}?`, `Did they attend ${e.name}?`)}</SectionTitle>
+          <ChoiceChips
+            options={[
+              { value: true, label: "Yes" },
+              { value: false, label: "No" },
+            ]}
+            value={attended[e.id] ?? false}
+            onChange={(v) => setAttended((a) => ({ ...a, [e.id]: v }))}
+          />
+        </View>
+      ))}
 
       <ErrorText>{error}</ErrorText>
       <Button

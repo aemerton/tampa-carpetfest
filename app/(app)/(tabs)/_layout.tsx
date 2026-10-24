@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { useIsAdmin } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -11,6 +12,7 @@ function icon(name: IconName) {
 }
 
 export default function AppTabs() {
+  const isAdmin = useIsAdmin();
   return (
     <Tabs
       screenOptions={{
@@ -36,6 +38,15 @@ export default function AppTabs() {
       <Tabs.Screen
         name="me"
         options={{ title: "My Profile", tabBarIcon: icon("person-circle") }}
+      />
+      {/* Admins only; hidden from everyone else's tab bar. */}
+      <Tabs.Screen
+        name="manage"
+        options={{
+          title: "Manage Event",
+          tabBarIcon: icon("settings"),
+          href: isAdmin ? undefined : null,
+        }}
       />
     </Tabs>
   );

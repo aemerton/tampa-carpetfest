@@ -11,7 +11,8 @@ function close() {
 }
 
 export default function AnnouncementEditor() {
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  // `id` edits an existing announcement; `eventId` creates one for that event.
+  const { id, eventId } = useLocalSearchParams<{ id?: string; eventId?: string }>();
   const isAdmin = useIsAdmin();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -47,6 +48,10 @@ export default function AnnouncementEditor() {
 
   async function save() {
     setError("");
+    if (!id && !eventId) {
+      setError("Open this from an event to post to it.");
+      return;
+    }
     if (!title.trim() || !body.trim()) {
       setError("Add a title and a message.");
       return;
@@ -55,7 +60,7 @@ export default function AnnouncementEditor() {
     const values = { title: title.trim(), body: body.trim() };
     const { error } = id
       ? await supabase.from("announcements").update(values).eq("id", id)
-      : await supabase.from("announcements").insert(values);
+      : await supabase.from("announcements").insert({ ...values, event_id: eventId });
     setBusy(false);
     if (error) setError(error.message);
     else close();
